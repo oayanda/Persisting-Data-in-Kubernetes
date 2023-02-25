@@ -35,3 +35,5 @@ else
   echo "Please run aws configure & set right credentials."
   echo "Cluster setup failed."
 fi
+
+
