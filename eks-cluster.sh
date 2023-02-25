@@ -37,3 +37,4 @@ else
 fi
 
 
+eksctl scale nodegroup --name=mynode-gp --cluster=oayanda-cluster --nodes=3
