@@ -113,8 +113,6 @@ Update the manifest file for the nginx depolyment with the volume ID and apply.
 # Apply update
 k apply -f <filename>
 
-#view pod information
-k describe pod
 ```
 
 ```bash
@@ -126,7 +124,7 @@ metadata:
   labels:
     tier: frontend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       tier: frontend
@@ -148,4 +146,27 @@ spec:
           fsType: ext4
 ```
 
+Now, the new pod has a volume attached to it, and can be used to run a container for statefuleness. Run describe on the deployment.
+
+```bash
+#view pod information
+k describe deploy
+```
+
 ![nginx](./images/8.png)
+
+To complete the configuration, we will need to add another section to the deployment yaml manifest. The volumeMounts which basically answers the question "Where should this Volume be mounted inside the container?" Mounting a volume to a directory means that all data written to the directory will be stored on that volume.
+
+Mount volume to directory by adding this section
+
+```bash
+        volumeMounts:
+        - name: nginx-volume
+          mountPath: /usr/share/nginx/
+```
+![nginx](./images/9.png)
+
+## Dynamically Persistent Volume (PV) and Persistent Volume Claim (PVC)
+
+
+## configMap
