@@ -195,9 +195,14 @@ spec:
 Apply the manifest file and view status
 
 ```bash
+# Create PVC
 k create -f pvc.yaml
 
+# view the status of PVC
 k get pvc
+
+# Get more details about PVC
+k describe pvc <pvcname>
 ```
 
 ![nginx](./images/11.png)
@@ -237,4 +242,121 @@ spec:
           claimName: nginx-volume-claim
 ```
 
-## configMap
+Verify the nginx pod is created with the volume created with the PVC.
+
+![nginx](./images/12.png)
+
+View dynamically created volume in AWS console
+
+![nginx](./images/13.png)
+
+Now the storage path "/tmp/oayanda" would persist across the pods in the deployment.
+
+## configMaps
+
+Using configMaps for persistence is not something you would consider for data storage. Rather it is a way to manage configuration files and ensure they are not lost as a result of Pod replacement.
+
+- Remove the volumeMounts and PVC sections of the manifest and use kubectl to apply the configuration.
+- port forward the service and ensure that you are able to see the "Welcome to nginx" page.
+- exec into the running container and keep a copy of the index.html file somewhere. For example.
+
+```bash
+k exec -it <pod-name> bash
+```
+![nginx](./images/14.png)
+
+According to the official documentation of configMaps, A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume.
+
+Here, We will use configMap to create a file in a volume.
+
+create and apply the configMap manifest file 
+
+```bash
+cat <<EOF | tee ./nginx-configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: website-index-file
+data:
+  # file to be mounted inside a volume
+  index-file: |
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>Welcome to nginx!</title>
+    <style>
+    html { color-scheme: light dark; }
+    body { width: 35em; margin: 0 auto;
+    font-family: Tahoma, Verdana, Arial, sans-serif; }
+    </style>
+    </head>
+    <body>
+    <h1>Welcome to nginx!</h1>
+    <p>If you see this page, the nginx web server is successfully installed and
+    working. Further configuration is required.</p>
+
+    <p>For online documentation and support please refer to
+    <a href="http://nginx.org/">nginx.org</a>.<br/>
+    Commercial support is available at
+    <a href="http://nginx.com/">nginx.com</a>.</p>
+
+    <p><em>Thank you for using nginx.</em></p>
+    </body>
+    </html>
+EOF
+```
+
+Update the deployment file to use the configmap in the volumeMounts section
+
+```bash
+cat <<EOF | tee ./nginx-deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+          - name: config
+            mountPath: /usr/share/nginx/html
+            readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          name: website-index-file
+          items:
+          - key: index-file
+            path: index.html
+EOF
+```
+
+Now the index.html file is no longer ephemeral because it is using a configMap that has been mounted onto the filesystem. This is now evident when you exec into the pod and list the /usr/share/nginx/html directory.
+
+![nginx](./images/15.png)
+
+Edit the config manifest file and updete deployment pod
+![nginx](./images/16.png)
+View in browser
+
+```bash
+k port-forward deployment.apps/nginx-deployment 8090:80
+```
+
+![nginx](./images/18.png)
+
+![nginx](./images/17.png)
