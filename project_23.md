@@ -1,27 +1,11 @@
 # Persisting Data in Kubernetes 
 
-By the default the pods are ephemeral, meaning it can dead at anytime and when it does, all information deads with the pod. 
+By the default the pods are ephemeral, meaning it can die at anytime and when it does, all information dies with the pod. 
 
 ## emptyDir
+
 An emptyDir volume is first created when a Pod is assigned to a node, and exists as long as that Pod is running on that node. As the name says, the emptyDir volume is initially empty. All containers in the Pod can read and write the same files in the emptyDir volume, though that volume can be mounted at the same or different paths in each container. When a Pod is removed from a node for any reason, the data in the emptyDir is deleted permanently.
 
-```bash
-apiVersion: v1
-kind: Pod
-metadata:
-  name: test-pd
-spec:
-  containers:
-  - image: registry.k8s.io/test-webserver
-    name: test-container
-    volumeMounts:
-    - mountPath: /cache
-      name: cache-volume
-  volumes:
-  - name: cache-volume
-    emptyDir:
-      sizeLimit: 500Mi
-```
 ## Configure awsElasticBlockStore for Persisant Storage
 
 An awsElasticBlockStore volume mounts an Amazon Web Services (AWS) EBS volume into your pod. The contents of an EBS volume are persisted and the volume is only unmmounted when the pod crashes, or terminates. This means that an EBS volume can be pre-populated with data, and that data can be shared between pods.
