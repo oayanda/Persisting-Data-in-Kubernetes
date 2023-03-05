@@ -166,7 +166,75 @@ Mount volume to directory by adding this section
 ```
 ![nginx](./images/9.png)
 
-## Dynamically Persistent Volume (PV) and Persistent Volume Claim (PVC)
+## Dynamically Persistent Volume (PV) and Persistent Volume Claim (PVC) on AWS EKS
 
+Let's check the available classes.
+
+```bash
+k get storageclass
+```
+
+![nginx](./images/10.png)
+
+Create a manifest file pvc.yaml for a PVC, and based on the gp2 storageClass.
+
+```bash
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nginx-volume-claim
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+  storageClassName: gp2
+  ```
+
+Apply the manifest file and view status
+
+```bash
+k create -f pvc.yaml
+
+k get pvc
+```
+
+![nginx](./images/11.png)
+
+To claim the volume, simply update the deployment manifest file volume section as seen the snippet below.
+
+> *Note, starting from EKS 1.23, you are required to install an additional Amaon EBS driver before you can attach volumes to your pods. I have used EKS version 1.22 in this tutorial.*
+
+```bash
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  labels:
+    tier: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      tier: frontend
+  template:
+    metadata:
+      labels:
+        tier: frontend
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-volume-claim
+          mountPath: "/tmp/oayanda"
+      volumes:
+      - name: nginx-volume-claim
+        persistentVolumeClaim:
+          claimName: nginx-volume-claim
+```
 
 ## configMap
