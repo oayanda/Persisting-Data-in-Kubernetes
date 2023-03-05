@@ -150,6 +150,14 @@ Mount volume to directory by adding this section
 ```
 ![nginx](./images/9.png)
 
+The value provided to name in volumeMounts must be the same value used in the volumes section. It basically means mount the volume with the name provided, to the provided mountpath
+In as much as we now have a way to persist data, we also have new problems.
+
+If you port forward the service and try to reach the endpoint, you will get a 403 error. This is because mounting a volume on a filesystem that already contains data will automatically erase all the existing data. This strategy for statefulness is preferred if the mounted volume already contains the data which you want to be made available to the container.
+
+![nginx](./images/19.png)
+![nginx](./images/20.png)
+
 ## Dynamically Persistent Volume (PV) and Persistent Volume Claim (PVC) on AWS EKS
 
 Let's check the available classes.
